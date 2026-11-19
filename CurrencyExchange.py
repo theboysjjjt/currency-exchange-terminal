@@ -5,7 +5,6 @@ import json
 import statistics as st
 import ssl
 import sys
-import os
 def menu():
     print("Welcome to the Currency terminal")
     print("1: Currency Exchange")
@@ -19,17 +18,17 @@ def frankfurter(url):
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
     try:
-        with ub.urlopen(req, context=context) as response:
+        with ub.urlopen(req, context=context, timeout=10) as response:
                 raw_data = response.read().decode("utf-8")
                 data_1 = json.loads(raw_data)
     except urllib.error.URLError:
         print("Sorry API not working properly try again")
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+        sys.exit()
     return data_1
 def Currency_Exchange():
     base = input("What currency are you starting with? (type in the 3 letter code) ")
     quote = input("What currency do you you want to exchange it to (type in the 3 letter code) ")
-    amount = int(input("How much money do you have "))
+    amount = float(input("How much money do you have "))
     date = input("What date would you like (yyyy-mm-dd format)")
     url = f"https://api.frankfurter.dev/v2/rates?base={base}&quotes={quote}&date={date}"  
     data_1 = frankfurter(url)
@@ -82,16 +81,10 @@ def Stability():
     url2 = f"https://api.frankfurter.dev/v2/rates?base={base}&quotes={quote2}&from={dateS}&to={dateE}"
     data_1 = frankfurter(url1)
     data_2 = frankfurter(url2)
-    numbers1 = list()
-    numbers2 = list()
-    for data in data_1:
-        data = data["rate"]
-        numbers1.append(data)
+    numbers1 = [data["rate"] for data in data_1]
+    numbers2 = [data["rate"] for data in data_2]
     stability1 = st.stdev(numbers1)
     stability1 = round(stability1, 2)
-    for data in data_2:
-            data = data["rate"]
-            numbers2.append(data)
     stability2 = st.stdev(numbers2)
     stability2 = round(stability2, 2)
     return stability1, stability2, quote1, quote2, dateS, dateE
@@ -125,3 +118,4 @@ elif choice == "4":
         print(f"The average daily change of {quote1} between dates {dateS} and {dateE} is {stability1} while the average daily change of {quote2} is {stability2}\nThis means that {quote1} is more stable than {quote2}")
     elif stability1 > stability2:
         print(f"The average daily change of {quote1} between dates {dateS} and {dateE} is {stability1} while the average daily change of {quote2} is {stability2}\nThis means that {quote2} is more stable than {quote1}")
+
